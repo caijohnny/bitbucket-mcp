@@ -1,0 +1,23 @@
+package.json
+  635fa005986ca2c9 10-12,16
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.31",
+  "base_commit_sha": "45e47321b74eee128b748b8ee724cff3d900257f",
+  "prompts": {
+    "635fa005986ca2c9": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d953c311-f270-4afa-8ebd-6b659da1d258",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "caijohnny <46647268+caijohnny@users.noreply.github.com>",
+      "messages": [],
+      "total_additions": 4,
+      "total_deletions": 7,
+      "accepted_lines": 4,
+      "overriden_lines": 0
+    }
+  }
+}
