@@ -489,27 +489,52 @@ export function registerPullRequestTools(client) {
                     },
                     filePath: {
                         type: 'string',
-                        description: 'Path to the file being commented on',
+                        description: 'Path to the file being commented on (relative to repo root, e.g., "src/application/home/service/HomeService.ts")',
                     },
                     line: {
                         type: 'number',
-                        description: 'Line number to comment on',
+                        description: 'Line number to comment on. For new files (ADDED), this should be the line number in the destination file. For modified files, use the line number in the diff view.',
                     },
                     lineType: {
                         type: 'string',
                         enum: ['ADDED', 'REMOVED', 'CONTEXT'],
-                        description: 'Type of line: ADDED (new line), REMOVED (deleted line), CONTEXT (unchanged line). Default: CONTEXT',
+                        description: 'Type of line: ADDED (new line in destination), REMOVED (deleted line from source), CONTEXT (unchanged line). Default: CONTEXT. For new files, use ADDED.',
                     },
                     fileType: {
                         type: 'string',
                         enum: ['FROM', 'TO'],
-                        description: 'FROM for the source file, TO for the destination file. Default: TO',
+                        description: 'FROM for the source file, TO for the destination file. Default: TO. For new files, always use TO.',
+                    },
+                    fromHash: {
+                        type: 'string',
+                        description: 'Optional: Source commit hash (fromRef.latestCommit). If provided along with toHash, will use COMMIT diffType.',
+                    },
+                    toHash: {
+                        type: 'string',
+                        description: 'Optional: Destination commit hash (toRef.latestCommit). If provided along with fromHash, will use COMMIT diffType.',
                     },
                 },
                 required: ['projectKey', 'repoSlug', 'prId', 'text', 'filePath', 'line'],
             },
             handler: async (args) => {
-                const comment = await client.addPullRequestLineComment(args.projectKey, args.repoSlug, args.prId, args.text, args.filePath, args.line, args.lineType || 'CONTEXT', args.fileType || 'TO');
+                // 如果没有提供 hash，尝试从 PR 获取（可选优化）
+                let fromHash = args.fromHash;
+                let toHash = args.toHash;
+                // 如果都没有提供，尝试获取 PR 信息来获取 commit hash
+                if (!fromHash || !toHash) {
+                    try {
+                        const pr = await client.getPullRequest(args.projectKey, args.repoSlug, args.prId);
+                        if (!fromHash)
+                            fromHash = pr.fromRef.latestCommit;
+                        if (!toHash)
+                            toHash = pr.toRef.latestCommit;
+                    }
+                    catch (error) {
+                        // 如果获取失败，继续使用原有的方式（不提供 hash）
+                        console.warn('Could not fetch PR info for commit hashes, using EFFECTIVE diffType');
+                    }
+                }
+                const comment = await client.addPullRequestLineComment(args.projectKey, args.repoSlug, args.prId, args.text, args.filePath, args.line, args.lineType || 'CONTEXT', args.fileType || 'TO', fromHash, toHash);
                 return {
                     content: [
                         {
@@ -517,7 +542,7 @@ export function registerPullRequestTools(client) {
                             text: JSON.stringify({
                                 success: true,
                                 commentId: comment?.id,
-                                message: `Comment added to ${args.filePath}:${args.line}`,
+                                message: `Comment added to ${args.filePath}:${args.line} (lineType: ${args.lineType || 'CONTEXT'}, fileType: ${args.fileType || 'TO'})`,
                             }, null, 2),
                         },
                     ],

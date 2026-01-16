@@ -439,6 +439,14 @@ export declare function registerPullRequestTools(client: BitbucketClient): {
                     enum: string[];
                     description: string;
                 };
+                fromHash: {
+                    type: string;
+                    description: string;
+                };
+                toHash: {
+                    type: string;
+                    description: string;
+                };
             };
             required: string[];
         };
@@ -451,6 +459,8 @@ export declare function registerPullRequestTools(client: BitbucketClient): {
             line: number;
             lineType?: "ADDED" | "REMOVED" | "CONTEXT";
             fileType?: "FROM" | "TO";
+            fromHash?: string;
+            toHash?: string;
         }) => Promise<{
             content: {
                 type: "text";

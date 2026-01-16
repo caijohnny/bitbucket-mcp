@@ -7,10 +7,15 @@
   "bin": {
     "bitbucket-mcp": "./dist/index.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/caijohnny/bitbucket-mcp.git"
+  },
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
-    "dev": "tsc --watch"
+    "dev": "tsc --watch",
+    "prepare": "npm run build"
   },
   "keywords": [
     "mcp",

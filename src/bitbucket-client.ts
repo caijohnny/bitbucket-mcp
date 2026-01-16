@@ -383,20 +383,40 @@ export class BitbucketClient {
     filePath: string,
     line: number,
     lineType: 'ADDED' | 'REMOVED' | 'CONTEXT' = 'CONTEXT',
-    fileType: 'FROM' | 'TO' = 'TO'
+    fileType: 'FROM' | 'TO' = 'TO',
+    fromHash?: string,
+    toHash?: string
   ): Promise<BitbucketPullRequestActivity['comment']> {
     try {
+      // 构建 anchor 对象
+      const anchor: {
+        path: string;
+        line: number;
+        lineType: string;
+        fileType: string;
+        diffType: string;
+        fromHash?: string;
+        toHash?: string;
+      } = {
+        path: filePath,
+        line,
+        lineType,
+        fileType,
+        diffType: 'EFFECTIVE',
+      };
+
+      // 如果提供了 hash，添加到 anchor 中（某些 Bitbucket 版本可能需要）
+      if (fromHash && toHash) {
+        anchor.fromHash = fromHash;
+        anchor.toHash = toHash;
+        anchor.diffType = 'COMMIT';
+      }
+
       const response = await this.client.post(
         `/projects/${projectKey}/repos/${repoSlug}/pull-requests/${prId}/comments`,
         {
           text,
-          anchor: {
-            path: filePath,
-            line,
-            lineType,
-            fileType,
-            diffType: 'EFFECTIVE',
-          },
+          anchor,
         }
       );
       return response.data;

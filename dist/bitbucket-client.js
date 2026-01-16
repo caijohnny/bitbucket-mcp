@@ -233,17 +233,25 @@ export class BitbucketClient {
             this.handleError(error);
         }
     }
-    async addPullRequestLineComment(projectKey, repoSlug, prId, text, filePath, line, lineType = 'CONTEXT', fileType = 'TO') {
+    async addPullRequestLineComment(projectKey, repoSlug, prId, text, filePath, line, lineType = 'CONTEXT', fileType = 'TO', fromHash, toHash) {
         try {
+            // 构建 anchor 对象
+            const anchor = {
+                path: filePath,
+                line,
+                lineType,
+                fileType,
+                diffType: 'EFFECTIVE',
+            };
+            // 如果提供了 hash，添加到 anchor 中（某些 Bitbucket 版本可能需要）
+            if (fromHash && toHash) {
+                anchor.fromHash = fromHash;
+                anchor.toHash = toHash;
+                anchor.diffType = 'COMMIT';
+            }
             const response = await this.client.post(`/projects/${projectKey}/repos/${repoSlug}/pull-requests/${prId}/comments`, {
                 text,
-                anchor: {
-                    path: filePath,
-                    line,
-                    lineType,
-                    fileType,
-                    diffType: 'EFFECTIVE',
-                },
+                anchor,
             });
             return response.data;
         }
