@@ -364,6 +364,140 @@ export declare function registerPullRequestTools(client: BitbucketClient): {
             }[];
         }>;
     };
+    update_pull_request: {
+        description: string;
+        inputSchema: {
+            type: "object";
+            properties: {
+                projectKey: {
+                    type: string;
+                    description: string;
+                };
+                repoSlug: {
+                    type: string;
+                    description: string;
+                };
+                prId: {
+                    type: string;
+                    description: string;
+                };
+                version: {
+                    type: string;
+                    description: string;
+                };
+                title: {
+                    type: string;
+                    description: string;
+                };
+                description: {
+                    type: string;
+                    description: string;
+                };
+                reviewers: {
+                    type: string;
+                    items: {
+                        type: string;
+                    };
+                    description: string;
+                };
+            };
+            required: string[];
+        };
+        handler: (args: {
+            projectKey: string;
+            repoSlug: string;
+            prId: number;
+            version: number;
+            title?: string;
+            description?: string;
+            reviewers?: string[];
+        }) => Promise<{
+            content: {
+                type: "text";
+                text: string;
+            }[];
+        }>;
+    };
+    add_pull_request_reviewers: {
+        description: string;
+        inputSchema: {
+            type: "object";
+            properties: {
+                projectKey: {
+                    type: string;
+                    description: string;
+                };
+                repoSlug: {
+                    type: string;
+                    description: string;
+                };
+                prId: {
+                    type: string;
+                    description: string;
+                };
+                version: {
+                    type: string;
+                    description: string;
+                };
+                reviewers: {
+                    type: string;
+                    items: {
+                        type: string;
+                    };
+                    description: string;
+                };
+            };
+            required: string[];
+        };
+        handler: (args: {
+            projectKey: string;
+            repoSlug: string;
+            prId: number;
+            version: number;
+            reviewers: string[];
+        }) => Promise<{
+            content: {
+                type: "text";
+                text: string;
+            }[];
+        }>;
+    };
+    remove_pull_request_reviewer: {
+        description: string;
+        inputSchema: {
+            type: "object";
+            properties: {
+                projectKey: {
+                    type: string;
+                    description: string;
+                };
+                repoSlug: {
+                    type: string;
+                    description: string;
+                };
+                prId: {
+                    type: string;
+                    description: string;
+                };
+                username: {
+                    type: string;
+                    description: string;
+                };
+            };
+            required: string[];
+        };
+        handler: (args: {
+            projectKey: string;
+            repoSlug: string;
+            prId: number;
+            username: string;
+        }) => Promise<{
+            content: {
+                type: "text";
+                text: string;
+            }[];
+        }>;
+    };
     add_pull_request_comment: {
         description: string;
         inputSchema: {

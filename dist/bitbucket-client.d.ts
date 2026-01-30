@@ -24,6 +24,16 @@ export declare class BitbucketClient {
     setReviewerStatus(projectKey: string, repoSlug: string, prId: number, username: string, status: 'APPROVED' | 'NEEDS_WORK' | 'UNAPPROVED'): Promise<void>;
     mergePullRequest(projectKey: string, repoSlug: string, prId: number, version: number): Promise<BitbucketPullRequest>;
     declinePullRequest(projectKey: string, repoSlug: string, prId: number, version: number): Promise<BitbucketPullRequest>;
+    updatePullRequest(projectKey: string, repoSlug: string, prId: number, version: number, updates: {
+        title?: string;
+        description?: string;
+        reviewers?: string[];
+        toRef?: {
+            id: string;
+        };
+    }): Promise<BitbucketPullRequest>;
+    addPullRequestReviewers(projectKey: string, repoSlug: string, prId: number, version: number, reviewers: string[]): Promise<BitbucketPullRequest>;
+    removePullRequestReviewer(projectKey: string, repoSlug: string, prId: number, username: string): Promise<void>;
     addPullRequestComment(projectKey: string, repoSlug: string, prId: number, text: string): Promise<BitbucketPullRequestActivity['comment']>;
     addPullRequestLineComment(projectKey: string, repoSlug: string, prId: number, text: string, filePath: string, line: number, lineType?: 'ADDED' | 'REMOVED' | 'CONTEXT', fileType?: 'FROM' | 'TO', fromHash?: string, toHash?: string): Promise<BitbucketPullRequestActivity['comment']>;
     replyToPullRequestComment(projectKey: string, repoSlug: string, prId: number, parentCommentId: number, text: string): Promise<BitbucketPullRequestActivity['comment']>;

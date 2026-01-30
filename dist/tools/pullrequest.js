@@ -427,6 +427,160 @@ export function registerPullRequestTools(client) {
                 };
             },
         },
+        update_pull_request: {
+            description: 'Update a pull request (title, description, reviewers)',
+            inputSchema: {
+                type: 'object',
+                properties: {
+                    projectKey: {
+                        type: 'string',
+                        description: 'Project key (e.g., "PROJ")',
+                    },
+                    repoSlug: {
+                        type: 'string',
+                        description: 'Repository slug (e.g., "my-repo")',
+                    },
+                    prId: {
+                        type: 'number',
+                        description: 'Pull request ID',
+                    },
+                    version: {
+                        type: 'number',
+                        description: 'Current version of the PR (for optimistic locking). Get it from get_pull_request.',
+                    },
+                    title: {
+                        type: 'string',
+                        description: 'New title for the PR (optional)',
+                    },
+                    description: {
+                        type: 'string',
+                        description: 'New description for the PR (optional)',
+                    },
+                    reviewers: {
+                        type: 'array',
+                        items: { type: 'string' },
+                        description: 'New list of reviewer usernames. This will REPLACE all existing reviewers. (optional)',
+                    },
+                },
+                required: ['projectKey', 'repoSlug', 'prId', 'version'],
+            },
+            handler: async (args) => {
+                const pr = await client.updatePullRequest(args.projectKey, args.repoSlug, args.prId, args.version, {
+                    title: args.title,
+                    description: args.description,
+                    reviewers: args.reviewers,
+                });
+                return {
+                    content: [
+                        {
+                            type: 'text',
+                            text: JSON.stringify({
+                                success: true,
+                                message: 'Pull request updated',
+                                id: pr.id,
+                                version: pr.version,
+                                title: pr.title,
+                                description: pr.description,
+                                reviewers: pr.reviewers.map((r) => ({
+                                    name: r.user.displayName,
+                                    username: r.user.name,
+                                    status: r.status,
+                                })),
+                            }, null, 2),
+                        },
+                    ],
+                };
+            },
+        },
+        add_pull_request_reviewers: {
+            description: 'Add reviewers to a pull request (existing reviewers will be kept)',
+            inputSchema: {
+                type: 'object',
+                properties: {
+                    projectKey: {
+                        type: 'string',
+                        description: 'Project key (e.g., "PROJ")',
+                    },
+                    repoSlug: {
+                        type: 'string',
+                        description: 'Repository slug (e.g., "my-repo")',
+                    },
+                    prId: {
+                        type: 'number',
+                        description: 'Pull request ID',
+                    },
+                    version: {
+                        type: 'number',
+                        description: 'Current version of the PR (for optimistic locking). Get it from get_pull_request.',
+                    },
+                    reviewers: {
+                        type: 'array',
+                        items: { type: 'string' },
+                        description: 'List of reviewer usernames to add',
+                    },
+                },
+                required: ['projectKey', 'repoSlug', 'prId', 'version', 'reviewers'],
+            },
+            handler: async (args) => {
+                const pr = await client.addPullRequestReviewers(args.projectKey, args.repoSlug, args.prId, args.version, args.reviewers);
+                return {
+                    content: [
+                        {
+                            type: 'text',
+                            text: JSON.stringify({
+                                success: true,
+                                message: 'Reviewers added',
+                                reviewers: pr.reviewers.map((r) => ({
+                                    name: r.user.displayName,
+                                    username: r.user.name,
+                                    status: r.status,
+                                })),
+                                newVersion: pr.version,
+                            }, null, 2),
+                        },
+                    ],
+                };
+            },
+        },
+        remove_pull_request_reviewer: {
+            description: 'Remove a reviewer from a pull request',
+            inputSchema: {
+                type: 'object',
+                properties: {
+                    projectKey: {
+                        type: 'string',
+                        description: 'Project key (e.g., "PROJ")',
+                    },
+                    repoSlug: {
+                        type: 'string',
+                        description: 'Repository slug (e.g., "my-repo")',
+                    },
+                    prId: {
+                        type: 'number',
+                        description: 'Pull request ID',
+                    },
+                    username: {
+                        type: 'string',
+                        description: 'Username of the reviewer to remove',
+                    },
+                },
+                required: ['projectKey', 'repoSlug', 'prId', 'username'],
+            },
+            handler: async (args) => {
+                await client.removePullRequestReviewer(args.projectKey, args.repoSlug, args.prId, args.username);
+                return {
+                    content: [
+                        {
+                            type: 'text',
+                            text: JSON.stringify({
+                                success: true,
+                                message: `Reviewer '${args.username}' removed from pull request`,
+                            }, null, 2),
+                        },
+                    ],
+                };
+            },
+        },
         add_pull_request_comment: {
             description: 'Add a general comment to a pull request',
             inputSchema: {

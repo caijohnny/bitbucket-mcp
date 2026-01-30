@@ -224,6 +224,57 @@ export class BitbucketClient {
             this.handleError(error);
         }
     }
+    async updatePullRequest(projectKey, repoSlug, prId, version, updates) {
+        try {
+            // 首先获取当前 PR 信息以保留未修改的字段
+            const currentPr = await this.getPullRequest(projectKey, repoSlug, prId);
+            const updatePayload = {
+                version,
+                title: updates.title ?? currentPr.title,
+                description: updates.description ?? currentPr.description,
+            };
+            // 如果提供了新的 reviewers 列表，使用它；否则保留原有的
+            if (updates.reviewers !== undefined) {
+                updatePayload.reviewers = updates.reviewers.map((name) => ({ user: { name } }));
+            }
+            // 如果提供了新的目标分支
+            if (updates.toRef) {
+                updatePayload.toRef = updates.toRef;
+            }
+            const response = await this.client.put(`/projects/${projectKey}/repos/${repoSlug}/pull-requests/${prId}`, updatePayload);
+            return response.data;
+        }
+        catch (error) {
+            this.handleError(error);
+        }
+    }
+    async addPullRequestReviewers(projectKey, repoSlug, prId, version, reviewers) {
+        try {
+            // 获取当前 PR 信息
+            const currentPr = await this.getPullRequest(projectKey, repoSlug, prId);
+            // 合并现有审查者和新审查者（去重）
+            const existingReviewerNames = currentPr.reviewers.map((r) => r.user.name);
+            const allReviewers = [...new Set([...existingReviewerNames, ...reviewers])];
+            const response = await this.client.put(`/projects/${projectKey}/repos/${repoSlug}/pull-requests/${prId}`, {
+                version,
+                title: currentPr.title,
+                description: currentPr.description,
+                reviewers: allReviewers.map((name) => ({ user: { name } })),
+            });
+            return response.data;
+        }
+        catch (error) {
+            this.handleError(error);
+        }
+    }
+    async removePullRequestReviewer(projectKey, repoSlug, prId, username) {
+        try {
+            await this.client.delete(`/projects/${projectKey}/repos/${repoSlug}/pull-requests/${prId}/participants/${username}`);
+        }
+        catch (error) {
+            this.handleError(error);
+        }
+    }
     async addPullRequestComment(projectKey, repoSlug, prId, text) {
         try {
             const response = await this.client.post(`/projects/${projectKey}/repos/${repoSlug}/pull-requests/${prId}/comments`, { text });
