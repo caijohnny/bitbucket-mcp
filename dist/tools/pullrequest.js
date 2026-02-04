@@ -678,10 +678,15 @@ export function registerPullRequestTools(client) {
                 if (!fromHash || !toHash) {
                     try {
                         const pr = await client.getPullRequest(args.projectKey, args.repoSlug, args.prId);
+                        // 注意：对于 COMMIT diffType，fromHash 是比较的起点（目标分支），toHash 是终点（源分支）
+                        // pr.fromRef 是 PR 的源分支（feature branch），pr.toRef 是目标分支（main/master）
+                        // diff 方向是从目标分支到源分支，所以：
+                        // - fromHash = toRef.latestCommit（目标分支的 commit，作为 diff 的 base）
+                        // - toHash = fromRef.latestCommit（源分支的 commit，作为 diff 的 head）
                         if (!fromHash)
-                            fromHash = pr.fromRef.latestCommit;
+                            fromHash = pr.toRef.latestCommit;
                         if (!toHash)
-                            toHash = pr.toRef.latestCommit;
+                            toHash = pr.fromRef.latestCommit;
                     }
                     catch (error) {
                         // 如果获取失败，继续使用原有的方式（不提供 hash）

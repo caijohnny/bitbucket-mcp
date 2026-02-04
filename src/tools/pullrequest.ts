@@ -868,13 +868,18 @@ export function registerPullRequestTools(client: BitbucketClient) {
         // 如果没有提供 hash，尝试从 PR 获取（可选优化）
         let fromHash = args.fromHash;
         let toHash = args.toHash;
-        
+
         // 如果都没有提供，尝试获取 PR 信息来获取 commit hash
         if (!fromHash || !toHash) {
           try {
             const pr = await client.getPullRequest(args.projectKey, args.repoSlug, args.prId);
-            if (!fromHash) fromHash = pr.fromRef.latestCommit;
-            if (!toHash) toHash = pr.toRef.latestCommit;
+            // 注意：对于 COMMIT diffType，fromHash 是比较的起点（目标分支），toHash 是终点（源分支）
+            // pr.fromRef 是 PR 的源分支（feature branch），pr.toRef 是目标分支（main/master）
+            // diff 方向是从目标分支到源分支，所以：
+            // - fromHash = toRef.latestCommit（目标分支的 commit，作为 diff 的 base）
+            // - toHash = fromRef.latestCommit（源分支的 commit，作为 diff 的 head）
+            if (!fromHash) fromHash = pr.toRef.latestCommit;
+            if (!toHash) toHash = pr.fromRef.latestCommit;
           } catch (error) {
             // 如果获取失败，继续使用原有的方式（不提供 hash）
             console.warn('Could not fetch PR info for commit hashes, using EFFECTIVE diffType');
