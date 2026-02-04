@@ -284,22 +284,29 @@ export class BitbucketClient {
             this.handleError(error);
         }
     }
-    async addPullRequestLineComment(projectKey, repoSlug, prId, text, filePath, line, lineType = 'CONTEXT', fileType = 'TO', fromHash, toHash) {
+    async addPullRequestLineComment(projectKey, repoSlug, prId, text, filePath, line, lineType = 'CONTEXT', fileType = 'TO') {
         try {
+            // 根据 lineType 自动设置正确的 fileType（如果不匹配）
+            // ADDED 行只存在于目标文件 (TO)
+            // REMOVED 行只存在于源文件 (FROM)
+            // CONTEXT 行在两边都存在，使用用户指定的 fileType
+            let effectiveFileType = fileType;
+            if (lineType === 'ADDED') {
+                effectiveFileType = 'TO';
+            }
+            else if (lineType === 'REMOVED') {
+                effectiveFileType = 'FROM';
+            }
             // 构建 anchor 对象
+            // 使用 EFFECTIVE diffType，它基于 PR 的有效 diff，更适合 PR 评论场景
             const anchor = {
                 path: filePath,
+                srcPath: filePath, // srcPath 通常与 path 相同，除非文件被重命名
                 line,
                 lineType,
-                fileType,
+                fileType: effectiveFileType,
                 diffType: 'EFFECTIVE',
             };
-            // 如果提供了 hash，添加到 anchor 中（某些 Bitbucket 版本可能需要）
-            if (fromHash && toHash) {
-                anchor.fromHash = fromHash;
-                anchor.toHash = toHash;
-                anchor.diffType = 'COMMIT';
-            }
             const response = await this.client.post(`/projects/${projectKey}/repos/${repoSlug}/pull-requests/${prId}/comments`, {
                 text,
                 anchor,

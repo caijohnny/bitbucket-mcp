@@ -35,7 +35,7 @@ export declare class BitbucketClient {
     addPullRequestReviewers(projectKey: string, repoSlug: string, prId: number, version: number, reviewers: string[]): Promise<BitbucketPullRequest>;
     removePullRequestReviewer(projectKey: string, repoSlug: string, prId: number, username: string): Promise<void>;
     addPullRequestComment(projectKey: string, repoSlug: string, prId: number, text: string): Promise<BitbucketPullRequestActivity['comment']>;
-    addPullRequestLineComment(projectKey: string, repoSlug: string, prId: number, text: string, filePath: string, line: number, lineType?: 'ADDED' | 'REMOVED' | 'CONTEXT', fileType?: 'FROM' | 'TO', fromHash?: string, toHash?: string): Promise<BitbucketPullRequestActivity['comment']>;
+    addPullRequestLineComment(projectKey: string, repoSlug: string, prId: number, text: string, filePath: string, line: number, lineType?: 'ADDED' | 'REMOVED' | 'CONTEXT', fileType?: 'FROM' | 'TO'): Promise<BitbucketPullRequestActivity['comment']>;
     replyToPullRequestComment(projectKey: string, repoSlug: string, prId: number, parentCommentId: number, text: string): Promise<BitbucketPullRequestActivity['comment']>;
     getPullRequestComments(projectKey: string, repoSlug: string, prId: number, path?: string, limit?: number, start?: number, anchorState?: 'ACTIVE' | 'ORPHANED' | 'ALL'): Promise<PagedResponse<BitbucketPullRequestActivity['comment']>>;
     deletePullRequestComment(projectKey: string, repoSlug: string, prId: number, commentId: number, version: number): Promise<void>;
