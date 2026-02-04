@@ -1,0 +1,23 @@
+README.md
+  be7b99d7ca339730 1-275
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "e0622d40c54dd95257cb9e41d514835ce5dbeafc",
+  "prompts": {
+    "be7b99d7ca339730": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "cc8e9cbe-248a-4e2e-a0a3-9fb2d3f37028",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "johntsai <johntsai@fanruan.com>",
+      "messages": [],
+      "total_additions": 275,
+      "total_deletions": 0,
+      "accepted_lines": 275,
+      "overriden_lines": 0
+    }
+  }
+}
