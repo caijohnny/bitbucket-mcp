@@ -1,0 +1,23 @@
+src/tools/pullrequest.ts
+  be7b99d7ca339730 871,876-882
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "e036954c7c518f2396198ee691b94b3aa29c9126",
+  "prompts": {
+    "be7b99d7ca339730": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "cc8e9cbe-248a-4e2e-a0a3-9fb2d3f37028",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "johntsai <johntsai@fanruan.com>",
+      "messages": [],
+      "total_additions": 8,
+      "total_deletions": 3,
+      "accepted_lines": 8,
+      "overriden_lines": 0
+    }
+  }
+}
