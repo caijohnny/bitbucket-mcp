@@ -215,6 +215,14 @@ export interface PagedResponse<T> {
   nextPageStart?: number;
 }
 
+export interface BitbucketMergeStatus {
+  canMerge: boolean;
+  vetoes: Array<{
+    summaryMessage: string;
+    detailedMessage: string;
+  }>;
+}
+
 export interface BitbucketConfig {
   baseUrl: string;
   token: string;

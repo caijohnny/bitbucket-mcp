@@ -434,6 +434,39 @@ export function registerPullRequestTools(client: BitbucketClient) {
       },
     },
 
+    can_merge_pull_request: {
+      description: 'Check if a pull request can be merged. Returns merge status and any vetoes (reasons preventing merge such as conflicts, insufficient approvals, failed builds, etc.)',
+      inputSchema: {
+        type: 'object' as const,
+        properties: {
+          projectKey: {
+            type: 'string',
+            description: 'Project key (e.g., "PROJ")',
+          },
+          repoSlug: {
+            type: 'string',
+            description: 'Repository slug (e.g., "my-repo")',
+          },
+          prId: {
+            type: 'number',
+            description: 'Pull request ID',
+          },
+        },
+        required: ['projectKey', 'repoSlug', 'prId'],
+      },
+      handler: async (args: { projectKey: string; repoSlug: string; prId: number }) => {
+        const mergeStatus = await client.canMergePullRequest(args.projectKey, args.repoSlug, args.prId);
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: JSON.stringify(mergeStatus, null, 2),
+            },
+          ],
+        };
+      },
+    },
+
     merge_pull_request: {
       description: 'Merge a pull request',
       inputSchema: {

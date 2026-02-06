@@ -202,6 +202,15 @@ export class BitbucketClient {
             this.handleError(error);
         }
     }
+    async canMergePullRequest(projectKey, repoSlug, prId) {
+        try {
+            const response = await this.client.get(`/projects/${projectKey}/repos/${repoSlug}/pull-requests/${prId}/merge`);
+            return response.data;
+        }
+        catch (error) {
+            this.handleError(error);
+        }
+    }
     async mergePullRequest(projectKey, repoSlug, prId, version) {
         try {
             const response = await this.client.post(`/projects/${projectKey}/repos/${repoSlug}/pull-requests/${prId}/merge`, {}, {

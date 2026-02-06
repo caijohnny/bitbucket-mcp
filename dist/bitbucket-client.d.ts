@@ -1,4 +1,4 @@
-import { BitbucketConfig, BitbucketProject, BitbucketRepository, BitbucketBranch, BitbucketPullRequest, BitbucketPullRequestActivity, BitbucketBrowsePath, BitbucketSearchResult, PagedResponse } from './types.js';
+import { BitbucketConfig, BitbucketProject, BitbucketRepository, BitbucketBranch, BitbucketPullRequest, BitbucketPullRequestActivity, BitbucketBrowsePath, BitbucketSearchResult, BitbucketMergeStatus, PagedResponse } from './types.js';
 export declare class BitbucketClient {
     private client;
     private baseUrl;
@@ -22,6 +22,7 @@ export declare class BitbucketClient {
     }>;
     unapprovePullRequest(projectKey: string, repoSlug: string, prId: number): Promise<void>;
     setReviewerStatus(projectKey: string, repoSlug: string, prId: number, username: string, status: 'APPROVED' | 'NEEDS_WORK' | 'UNAPPROVED'): Promise<void>;
+    canMergePullRequest(projectKey: string, repoSlug: string, prId: number): Promise<BitbucketMergeStatus>;
     mergePullRequest(projectKey: string, repoSlug: string, prId: number, version: number): Promise<BitbucketPullRequest>;
     declinePullRequest(projectKey: string, repoSlug: string, prId: number, version: number): Promise<BitbucketPullRequest>;
     updatePullRequest(projectKey: string, repoSlug: string, prId: number, version: number, updates: {

@@ -8,6 +8,7 @@ import {
   BitbucketPullRequestActivity,
   BitbucketBrowsePath,
   BitbucketSearchResult,
+  BitbucketMergeStatus,
   PagedResponse,
 } from './types.js';
 
@@ -313,6 +314,21 @@ export class BitbucketClient {
           status,
         }
       );
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  async canMergePullRequest(
+    projectKey: string,
+    repoSlug: string,
+    prId: number
+  ): Promise<BitbucketMergeStatus> {
+    try {
+      const response = await this.client.get(
+        `/projects/${projectKey}/repos/${repoSlug}/pull-requests/${prId}/merge`
+      );
+      return response.data;
     } catch (error) {
       this.handleError(error);
     }

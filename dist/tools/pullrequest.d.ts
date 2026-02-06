@@ -292,6 +292,37 @@ export declare function registerPullRequestTools(client: BitbucketClient): {
             }[];
         }>;
     };
+    can_merge_pull_request: {
+        description: string;
+        inputSchema: {
+            type: "object";
+            properties: {
+                projectKey: {
+                    type: string;
+                    description: string;
+                };
+                repoSlug: {
+                    type: string;
+                    description: string;
+                };
+                prId: {
+                    type: string;
+                    description: string;
+                };
+            };
+            required: string[];
+        };
+        handler: (args: {
+            projectKey: string;
+            repoSlug: string;
+            prId: number;
+        }) => Promise<{
+            content: {
+                type: "text";
+                text: string;
+            }[];
+        }>;
+    };
     merge_pull_request: {
         description: string;
         inputSchema: {

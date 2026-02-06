@@ -347,6 +347,38 @@ export function registerPullRequestTools(client) {
                 };
             },
         },
+        can_merge_pull_request: {
+            description: 'Check if a pull request can be merged. Returns merge status and any vetoes (reasons preventing merge such as conflicts, insufficient approvals, failed builds, etc.)',
+            inputSchema: {
+                type: 'object',
+                properties: {
+                    projectKey: {
+                        type: 'string',
+                        description: 'Project key (e.g., "PROJ")',
+                    },
+                    repoSlug: {
+                        type: 'string',
+                        description: 'Repository slug (e.g., "my-repo")',
+                    },
+                    prId: {
+                        type: 'number',
+                        description: 'Pull request ID',
+                    },
+                },
+                required: ['projectKey', 'repoSlug', 'prId'],
+            },
+            handler: async (args) => {
+                const mergeStatus = await client.canMergePullRequest(args.projectKey, args.repoSlug, args.prId);
+                return {
+                    content: [
+                        {
+                            type: 'text',
+                            text: JSON.stringify(mergeStatus, null, 2),
+                        },
+                    ],
+                };
+            },
+        },
         merge_pull_request: {
             description: 'Merge a pull request',
             inputSchema: {
