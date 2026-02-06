@@ -1,0 +1,27 @@
+src/tools/pullrequest.ts
+  86b2205d4c0ae356 437-469
+src/bitbucket-client.ts
+  86b2205d4c0ae356 11,322-336
+src/types.ts
+  86b2205d4c0ae356 218-225
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "d6320180009142f4d08c0a3e31430972b3ee4503",
+  "prompts": {
+    "86b2205d4c0ae356": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8977f71a-0f12-4085-ad78-768f6d1d8f6c",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "johntsai <johntsai@fanruan.com>",
+      "messages": [],
+      "total_additions": 57,
+      "total_deletions": 0,
+      "accepted_lines": 57,
+      "overriden_lines": 0
+    }
+  }
+}
