@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
+import { createServer as createHttpServer } from 'node:http';
 import { createServer as createHttpsServer } from 'node:https';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
@@ -16,9 +17,14 @@ const DEFAULT_BITBUCKET_TOKEN = process.env.BITBUCKET_TOKEN;
 const MCP_HOST = process.env.MCP_HOST || '127.0.0.1';
 const MCP_PATH = process.env.MCP_PATH || '/mcp';
 const MCP_PORT = parsePort(process.env.MCP_PORT, 51666);
-const MCP_TLS_KEY_PATH = getRequiredEnv('MCP_TLS_KEY_PATH');
-const MCP_TLS_CERT_PATH = getRequiredEnv('MCP_TLS_CERT_PATH');
+const MCP_TLS_KEY_PATH = process.env.MCP_TLS_KEY_PATH;
+const MCP_TLS_CERT_PATH = process.env.MCP_TLS_CERT_PATH;
 const MCP_TLS_CA_PATH = process.env.MCP_TLS_CA_PATH;
+const MCP_PROTOCOL = resolveProtocol({
+    protocol: process.env.MCP_PROTOCOL,
+    tlsKeyPath: MCP_TLS_KEY_PATH,
+    tlsCertPath: MCP_TLS_CERT_PATH,
+});
 const sessions = new Map();
 function createMcpServer(bitbucketConfig) {
     const bitbucketClient = new BitbucketClient({
@@ -123,6 +129,28 @@ function parsePort(value, fallback) {
     }
     return port;
 }
+function parseProtocol(value) {
+    const protocol = value.toLowerCase();
+    if (protocol !== 'http' && protocol !== 'https') {
+        console.error(`Error: invalid MCP_PROTOCOL value "${value}"`);
+        process.exit(1);
+    }
+    return protocol;
+}
+function resolveProtocol(config) {
+    const { protocol, tlsKeyPath, tlsCertPath } = config;
+    if (protocol) {
+        return parseProtocol(protocol);
+    }
+    if (tlsKeyPath && tlsCertPath) {
+        return 'https';
+    }
+    if (tlsKeyPath || tlsCertPath) {
+        console.error('Error: MCP_TLS_KEY_PATH and MCP_TLS_CERT_PATH must both be provided to enable HTTPS automatically');
+        process.exit(1);
+    }
+    return 'http';
+}
 function getRequiredEnv(name) {
     const value = process.env[name];
     if (!value) {
@@ -142,7 +170,7 @@ function writeTextResponse(res, statusCode, body, headers = {}) {
 async function handleMcpRequest(req, res) {
     const sessionId = getSessionId(req);
     const existingSession = sessionId ? sessions.get(sessionId) : undefined;
-    const requestUrl = new URL(req.url || '/', `https://${req.headers.host || 'localhost'}`);
+    const requestUrl = getRequestUrl(req);
     if (sessionId && !existingSession) {
         writeTextResponse(res, 404, 'Session not found');
         return;
@@ -176,7 +204,7 @@ async function handleMcpRequest(req, res) {
     }
 }
 async function routeRequest(req, res) {
-    const requestUrl = new URL(req.url || '/', `https://${req.headers.host || 'localhost'}`);
+    const requestUrl = getRequestUrl(req);
     if (requestUrl.pathname !== MCP_PATH) {
         writeTextResponse(res, 404, 'Not found');
         return;
@@ -238,40 +266,58 @@ function getQueryParam(requestUrl, ...names) {
 async function closeSession(session) {
     await Promise.allSettled([session.transport.close(), session.server.close()]);
 }
+function getRequestUrl(req) {
+    const host = req.headers.host || `${MCP_HOST}:${MCP_PORT}`;
+    return new URL(req.url || '/', `${getRequestProtocol(req)}://${host}`);
+}
+function getRequestProtocol(req) {
+    const forwardedProtoHeader = req.headers['x-forwarded-proto'];
+    const forwardedProto = Array.isArray(forwardedProtoHeader)
+        ? forwardedProtoHeader[0]
+        : forwardedProtoHeader?.split(',')[0];
+    const normalizedProto = forwardedProto?.trim().toLowerCase();
+    if (normalizedProto === 'http' || normalizedProto === 'https') {
+        return normalizedProto;
+    }
+    return MCP_PROTOCOL;
+}
 function getSessionId(req) {
     const sessionId = req.headers['mcp-session-id'];
     return Array.isArray(sessionId) ? sessionId[0] : sessionId;
 }
 // Start the server
 async function main() {
-    const httpsServer = createHttpsServer({
-        key: readFileSync(MCP_TLS_KEY_PATH),
-        cert: readFileSync(MCP_TLS_CERT_PATH),
-        ...(MCP_TLS_CA_PATH ? { ca: readFileSync(MCP_TLS_CA_PATH) } : {}),
-    }, (req, res) => {
+    const requestHandler = (req, res) => {
         void routeRequest(req, res).catch((error) => {
-            console.error('Unhandled HTTPS request error:', error);
+            console.error('Unhandled MCP request error:', error);
             if (!res.headersSent) {
                 writeTextResponse(res, 500, 'Internal server error');
             }
         });
-    });
+    };
+    const server = MCP_PROTOCOL === 'https'
+        ? createHttpsServer({
+            key: readFileSync(getRequiredEnv('MCP_TLS_KEY_PATH')),
+            cert: readFileSync(getRequiredEnv('MCP_TLS_CERT_PATH')),
+            ...(MCP_TLS_CA_PATH ? { ca: readFileSync(MCP_TLS_CA_PATH) } : {}),
+        }, requestHandler)
+        : createHttpServer(requestHandler);
     await new Promise((resolve, reject) => {
         const onError = (error) => {
-            httpsServer.off('error', onError);
+            server.off('error', onError);
             reject(error);
         };
-        httpsServer.once('error', onError);
-        httpsServer.listen(MCP_PORT, MCP_HOST, () => {
-            httpsServer.off('error', onError);
+        server.once('error', onError);
+        server.listen(MCP_PORT, MCP_HOST, () => {
+            server.off('error', onError);
             resolve();
         });
     });
     const shutdown = () => {
         void Promise.allSettled(Array.from(sessions.values()).map((session) => closeSession(session))).finally(() => {
-            httpsServer.close((error) => {
+            server.close((error) => {
                 if (error) {
-                    console.error('Failed to shut down HTTPS server:', error);
+                    console.error(`Failed to shut down ${MCP_PROTOCOL.toUpperCase()} server:`, error);
                     process.exit(1);
                 }
                 process.exit(0);
@@ -280,7 +326,7 @@ async function main() {
     };
     process.on('SIGINT', shutdown);
     process.on('SIGTERM', shutdown);
-    console.error(`Bitbucket MCP HTTPS server listening on https://${MCP_HOST}:${MCP_PORT}${MCP_PATH}`);
+    console.error(`Bitbucket MCP ${MCP_PROTOCOL.toUpperCase()} server listening on ${MCP_PROTOCOL}://${MCP_HOST}:${MCP_PORT}${MCP_PATH}`);
 }
 main().catch((error) => {
     console.error('Fatal error:', error);

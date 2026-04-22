@@ -50,12 +50,13 @@ Set the following environment variables:
 |----------|----------|-------------|
 | `BITBUCKET_TOKEN` | Yes | Your Bitbucket personal access token |
 | `BITBUCKET_URL` | No | Bitbucket Server URL (default: `https://code.fineres.com`) |
-| `MCP_HOST` | No | HTTPS bind host (default: `127.0.0.1`) |
-| `MCP_PORT` | No | HTTPS bind port (default: `51666`) |
+| `MCP_PROTOCOL` | No | MCP transport protocol: `https` or `http`. If omitted, the server uses `https` when both TLS cert paths are set, otherwise defaults to `http` |
+| `MCP_HOST` | No | MCP bind host (default: `127.0.0.1`) |
+| `MCP_PORT` | No | MCP bind port (default: `51666`) |
 | `MCP_PATH` | No | MCP endpoint path (default: `/mcp`) |
-| `MCP_TLS_KEY_PATH` | Yes | Path to the TLS private key PEM file |
-| `MCP_TLS_CERT_PATH` | Yes | Path to the TLS certificate PEM file |
-| `MCP_TLS_CA_PATH` | No | Optional CA bundle PEM file |
+| `MCP_TLS_KEY_PATH` | Only for `https` | Path to the TLS private key PEM file |
+| `MCP_TLS_CERT_PATH` | Only for `https` | Path to the TLS certificate PEM file |
+| `MCP_TLS_CA_PATH` | No | Optional CA bundle PEM file, only used for `https` |
 
 #### Creating a Personal Access Token
 
@@ -72,6 +73,7 @@ Set the following environment variables:
 ```bash
 BITBUCKET_URL=https://your-bitbucket-server.com \
 BITBUCKET_TOKEN=your-personal-access-token \
+MCP_PROTOCOL=https \
 MCP_HOST=127.0.0.1 \
 MCP_PORT=51666 \
 MCP_PATH=/mcp \
@@ -82,9 +84,23 @@ npm start
 
 The MCP endpoint will be available at `https://127.0.0.1:51666/mcp` by default.
 
+### Run as an HTTP MCP Server
+
+```bash
+BITBUCKET_URL=http://your-bitbucket-server.com \
+BITBUCKET_TOKEN=your-personal-access-token \
+MCP_HOST=127.0.0.1 \
+MCP_PORT=51666 \
+MCP_PATH=/mcp \
+npm start
+```
+
+In HTTP mode, no TLS certificate configuration is required, and the endpoint will be available at `http://127.0.0.1:51666/mcp`.
+If you start the server without `MCP_PROTOCOL` and without TLS certificate paths, it will also default to HTTP automatically. This works well for Docker or internal trusted networks.
+
 ### Connect from an MCP Client
 
-Register the HTTPS endpoint in any MCP client that supports Streamable HTTP transport.
+Register the HTTP or HTTPS endpoint in any MCP client that supports Streamable HTTP transport.
 
 If you want to verify the server manually, you can send an `initialize` request:
 
@@ -107,6 +123,8 @@ curl -k https://127.0.0.1:51666/mcp \
     }
   }'
 ```
+
+For HTTP mode, use `http://127.0.0.1:51666/mcp` and remove the `-k` option.
 
 Use `-k` only for local testing with a self-signed certificate.
 
@@ -205,12 +223,13 @@ npm run build
 |------|------|------|
 | `BITBUCKET_TOKEN` | 是 | 你的 Bitbucket 个人访问令牌 |
 | `BITBUCKET_URL` | 否 | Bitbucket Server URL（默认：`https://code.fineres.com`） |
-| `MCP_HOST` | 否 | HTTPS 监听地址（默认：`127.0.0.1`） |
-| `MCP_PORT` | 否 | HTTPS 监听端口（默认：`51666`） |
+| `MCP_PROTOCOL` | 否 | MCP 传输协议，可选 `https` 或 `http`。如果不传，且 TLS 证书路径齐全则使用 `https`，否则默认 `http` |
+| `MCP_HOST` | 否 | MCP 监听地址（默认：`127.0.0.1`） |
+| `MCP_PORT` | 否 | MCP 监听端口（默认：`51666`） |
 | `MCP_PATH` | 否 | MCP 接口路径（默认：`/mcp`） |
-| `MCP_TLS_KEY_PATH` | 是 | TLS 私钥 PEM 文件路径 |
-| `MCP_TLS_CERT_PATH` | 是 | TLS 证书 PEM 文件路径 |
-| `MCP_TLS_CA_PATH` | 否 | 可选的 CA PEM 文件路径 |
+| `MCP_TLS_KEY_PATH` | 仅 `https` 时必需 | TLS 私钥 PEM 文件路径 |
+| `MCP_TLS_CERT_PATH` | 仅 `https` 时必需 | TLS 证书 PEM 文件路径 |
+| `MCP_TLS_CA_PATH` | 否 | 可选的 CA PEM 文件路径，仅 `https` 时使用 |
 
 #### 创建个人访问令牌
 
@@ -227,6 +246,7 @@ npm run build
 ```bash
 BITBUCKET_URL=https://your-bitbucket-server.com \
 BITBUCKET_TOKEN=your-personal-access-token \
+MCP_PROTOCOL=https \
 MCP_HOST=127.0.0.1 \
 MCP_PORT=51666 \
 MCP_PATH=/mcp \
@@ -237,9 +257,23 @@ npm start
 
 默认情况下，MCP 地址是 `https://127.0.0.1:51666/mcp`。
 
+### 以 HTTP MCP 服务启动
+
+```bash
+BITBUCKET_URL=http://your-bitbucket-server.com \
+BITBUCKET_TOKEN=your-personal-access-token \
+MCP_HOST=127.0.0.1 \
+MCP_PORT=51666 \
+MCP_PATH=/mcp \
+npm start
+```
+
+在 HTTP 模式下不需要 TLS 证书配置，默认地址是 `http://127.0.0.1:51666/mcp`。
+如果既不传 `MCP_PROTOCOL`，也不传 TLS 证书路径，服务也会自动退回到 HTTP。这种方式很适合 Docker 或内网环境。
+
 ### 在 MCP 客户端中接入
 
-把这个 HTTPS 地址注册到支持 Streamable HTTP transport 的 MCP 客户端里即可。
+把这个 HTTP 或 HTTPS 地址注册到支持 Streamable HTTP transport 的 MCP 客户端里即可。
 
 如果你想先手动验证服务是否可用，可以发送一个 `initialize` 请求：
 
@@ -262,6 +296,8 @@ curl -k https://127.0.0.1:51666/mcp \
     }
   }'
 ```
+
+如果是 HTTP 模式，把地址改成 `http://127.0.0.1:51666/mcp`，并去掉 `-k` 参数即可。
 
 `-k` 只建议在本地自签名证书调试时使用。
 
