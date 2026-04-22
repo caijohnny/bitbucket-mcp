@@ -50,6 +50,12 @@ Set the following environment variables:
 |----------|----------|-------------|
 | `BITBUCKET_TOKEN` | Yes | Your Bitbucket personal access token |
 | `BITBUCKET_URL` | No | Bitbucket Server URL (default: `https://code.fineres.com`) |
+| `MCP_HOST` | No | HTTPS bind host (default: `127.0.0.1`) |
+| `MCP_PORT` | No | HTTPS bind port (default: `51666`) |
+| `MCP_PATH` | No | MCP endpoint path (default: `/mcp`) |
+| `MCP_TLS_KEY_PATH` | Yes | Path to the TLS private key PEM file |
+| `MCP_TLS_CERT_PATH` | Yes | Path to the TLS certificate PEM file |
+| `MCP_TLS_CA_PATH` | No | Optional CA bundle PEM file |
 
 #### Creating a Personal Access Token
 
@@ -61,27 +67,48 @@ Set the following environment variables:
    - `Repository write` - for creating PRs
    - `Pull request read/write` - for managing PRs
 
-### Usage with Claude Desktop
+### Run as an HTTPS MCP Server
 
-Add the following to your Claude Desktop configuration file:
+```bash
+BITBUCKET_URL=https://your-bitbucket-server.com \
+BITBUCKET_TOKEN=your-personal-access-token \
+MCP_HOST=127.0.0.1 \
+MCP_PORT=51666 \
+MCP_PATH=/mcp \
+MCP_TLS_KEY_PATH=/path/to/server.key \
+MCP_TLS_CERT_PATH=/path/to/server.crt \
+npm start
+```
 
-**macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-**Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+The MCP endpoint will be available at `https://127.0.0.1:51666/mcp` by default.
 
-```json
-{
-  "mcpServers": {
-    "bitbucket": {
-      "command": "npx",
-      "args": ["-y", "github:caijohnny/bitbucket-mcp"],
-      "env": {
-        "BITBUCKET_URL": "https://your-bitbucket-server.com",
-        "BITBUCKET_TOKEN": "your-personal-access-token"
+### Connect from an MCP Client
+
+Register the HTTPS endpoint in any MCP client that supports Streamable HTTP transport.
+
+If you want to verify the server manually, you can send an `initialize` request:
+
+```bash
+curl -k https://127.0.0.1:51666/mcp \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json, text/event-stream' \
+  -H 'MCP-Protocol-Version: 2025-11-25' \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "initialize",
+    "params": {
+      "protocolVersion": "2025-11-25",
+      "capabilities": {},
+      "clientInfo": {
+        "name": "curl",
+        "version": "1.0.0"
       }
     }
-  }
-}
+  }'
 ```
+
+Use `-k` only for local testing with a self-signed certificate.
 
 ### Available Tools
 
@@ -178,6 +205,12 @@ npm run build
 |------|------|------|
 | `BITBUCKET_TOKEN` | 是 | 你的 Bitbucket 个人访问令牌 |
 | `BITBUCKET_URL` | 否 | Bitbucket Server URL（默认：`https://code.fineres.com`） |
+| `MCP_HOST` | 否 | HTTPS 监听地址（默认：`127.0.0.1`） |
+| `MCP_PORT` | 否 | HTTPS 监听端口（默认：`51666`） |
+| `MCP_PATH` | 否 | MCP 接口路径（默认：`/mcp`） |
+| `MCP_TLS_KEY_PATH` | 是 | TLS 私钥 PEM 文件路径 |
+| `MCP_TLS_CERT_PATH` | 是 | TLS 证书 PEM 文件路径 |
+| `MCP_TLS_CA_PATH` | 否 | 可选的 CA PEM 文件路径 |
 
 #### 创建个人访问令牌
 
@@ -189,27 +222,48 @@ npm run build
    - `Repository write` - 用于创建 PR
    - `Pull request read/write` - 用于管理 PR
 
-### 在 Claude Desktop 中使用
+### 以 HTTPS MCP 服务启动
 
-将以下内容添加到你的 Claude Desktop 配置文件：
+```bash
+BITBUCKET_URL=https://your-bitbucket-server.com \
+BITBUCKET_TOKEN=your-personal-access-token \
+MCP_HOST=127.0.0.1 \
+MCP_PORT=51666 \
+MCP_PATH=/mcp \
+MCP_TLS_KEY_PATH=/path/to/server.key \
+MCP_TLS_CERT_PATH=/path/to/server.crt \
+npm start
+```
 
-**macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-**Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+默认情况下，MCP 地址是 `https://127.0.0.1:51666/mcp`。
 
-```json
-{
-  "mcpServers": {
-    "bitbucket": {
-      "command": "npx",
-      "args": ["-y", "github:caijohnny/bitbucket-mcp"],
-      "env": {
-        "BITBUCKET_URL": "https://your-bitbucket-server.com",
-        "BITBUCKET_TOKEN": "your-personal-access-token"
+### 在 MCP 客户端中接入
+
+把这个 HTTPS 地址注册到支持 Streamable HTTP transport 的 MCP 客户端里即可。
+
+如果你想先手动验证服务是否可用，可以发送一个 `initialize` 请求：
+
+```bash
+curl -k https://127.0.0.1:51666/mcp \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json, text/event-stream' \
+  -H 'MCP-Protocol-Version: 2025-11-25' \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "initialize",
+    "params": {
+      "protocolVersion": "2025-11-25",
+      "capabilities": {},
+      "clientInfo": {
+        "name": "curl",
+        "version": "1.0.0"
       }
     }
-  }
-}
+  }'
 ```
+
+`-k` 只建议在本地自签名证书调试时使用。
 
 ### 可用工具
 
