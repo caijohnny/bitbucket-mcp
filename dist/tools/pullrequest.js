@@ -114,15 +114,23 @@ export function registerPullRequestTools(client) {
                 properties: {
                     projectKey: {
                         type: 'string',
-                        description: 'Project key (e.g., "PROJ")',
+                        description: 'Target project key (e.g., "PROJ")',
                     },
                     repoSlug: {
                         type: 'string',
-                        description: 'Repository slug (e.g., "my-repo")',
+                        description: 'Target repository slug (e.g., "my-repo")',
                     },
                     title: {
                         type: 'string',
                         description: 'PR title',
+                    },
+                    fromProjectKey: {
+                        type: 'string',
+                        description: 'Source project key for cross-repository PRs (defaults to projectKey)',
+                    },
+                    fromRepoSlug: {
+                        type: 'string',
+                        description: 'Source repository slug for cross-repository PRs (defaults to repoSlug)',
                     },
                     fromBranch: {
                         type: 'string',
@@ -145,7 +153,7 @@ export function registerPullRequestTools(client) {
                 required: ['projectKey', 'repoSlug', 'title', 'fromBranch', 'toBranch'],
             },
             handler: async (args) => {
-                const pr = await client.createPullRequest(args.projectKey, args.repoSlug, args.title, args.fromBranch, args.toBranch, args.description, args.reviewers);
+                const pr = await client.createPullRequest(args.projectKey, args.repoSlug, args.title, args.fromBranch, args.toBranch, args.description, args.reviewers, args.fromProjectKey, args.fromRepoSlug);
                 return {
                     content: [
                         {

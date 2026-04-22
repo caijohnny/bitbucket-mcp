@@ -15,6 +15,7 @@ A Model Context Protocol (MCP) server for Bitbucket Server (Data Center). This s
 - **Branch Management**: List branches, get default branch
 - **Pull Request Management**:
   - Create, update, merge, decline PRs
+  - Create cross-repository PRs from forks by overriding the source repository
   - Add/remove reviewers
   - Approve/unapprove PRs
   - Mark PRs as "needs work"
@@ -171,6 +172,8 @@ Use `-k` only for local testing with a self-signed certificate.
 | `list_my_pull_requests` | List PRs related to me |
 | `list_my_pull_requests_to_review` | List PRs I need to review |
 
+`create_pull_request` uses `projectKey` and `repoSlug` as the target repository. For cross-repository PRs, pass `fromProjectKey` and `fromRepoSlug` to point at the source repository; if omitted, the source defaults to the target repository.
+
 ### License
 
 MIT
@@ -188,6 +191,7 @@ MIT
 - **分支管理**：列出分支、获取默认分支
 - **Pull Request 管理**：
   - 创建、更新、合并、拒绝 PR
+  - 通过覆盖源仓库参数来创建 fork 间的跨仓库 PR
   - 添加/移除审查者
   - 批准/取消批准 PR
   - 标记 PR 为"需要修改"
@@ -343,6 +347,8 @@ curl -k https://127.0.0.1:51666/mcp \
 | `remove_pull_request_reviewer` | 移除审查者 |
 | `list_my_pull_requests` | 列出与我相关的 PR |
 | `list_my_pull_requests_to_review` | 列出我需要审查的 PR |
+
+`create_pull_request` 中的 `projectKey` 和 `repoSlug` 表示目标仓库。创建跨仓库 PR 时，可额外传入 `fromProjectKey` 和 `fromRepoSlug` 指向源仓库；不传时默认源仓库与目标仓库相同。
 
 ### 行级评论使用说明
 
