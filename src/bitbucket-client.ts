@@ -203,9 +203,23 @@ export class BitbucketClient {
     fromBranch: string,
     toBranch: string,
     description?: string,
-    reviewers?: string[]
+    reviewers?: string[],
+    fromProjectKey?: string,
+    fromRepoSlug?: string
   ): Promise<BitbucketPullRequest> {
     try {
+      const targetRepository = {
+        project: {
+          key: projectKey,
+        },
+        slug: repoSlug,
+      };
+      const sourceRepository = {
+        project: {
+          key: fromProjectKey || projectKey,
+        },
+        slug: fromRepoSlug || repoSlug,
+      };
       const response = await this.client.post(
         `/projects/${projectKey}/repos/${repoSlug}/pull-requests`,
         {
@@ -213,9 +227,11 @@ export class BitbucketClient {
           description,
           fromRef: {
             id: `refs/heads/${fromBranch}`,
+            repository: sourceRepository,
           },
           toRef: {
             id: `refs/heads/${toBranch}`,
+            repository: targetRepository,
           },
           reviewers: reviewers?.map((name) => ({ user: { name } })),
         }

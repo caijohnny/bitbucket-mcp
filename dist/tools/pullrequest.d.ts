@@ -85,6 +85,14 @@ export declare function registerPullRequestTools(client: BitbucketClient): {
                     type: string;
                     description: string;
                 };
+                fromProjectKey: {
+                    type: string;
+                    description: string;
+                };
+                fromRepoSlug: {
+                    type: string;
+                    description: string;
+                };
                 fromBranch: {
                     type: string;
                     description: string;
@@ -111,6 +119,8 @@ export declare function registerPullRequestTools(client: BitbucketClient): {
             projectKey: string;
             repoSlug: string;
             title: string;
+            fromProjectKey?: string;
+            fromRepoSlug?: string;
             fromBranch: string;
             toBranch: string;
             description?: string;

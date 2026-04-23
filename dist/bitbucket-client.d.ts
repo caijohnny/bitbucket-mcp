@@ -14,7 +14,7 @@ export declare class BitbucketClient {
     getDefaultBranch(projectKey: string, repoSlug: string): Promise<BitbucketBranch>;
     listPullRequests(projectKey: string, repoSlug: string, state?: 'OPEN' | 'MERGED' | 'DECLINED' | 'ALL', limit?: number, start?: number, direction?: 'INCOMING' | 'OUTGOING'): Promise<PagedResponse<BitbucketPullRequest>>;
     getPullRequest(projectKey: string, repoSlug: string, prId: number): Promise<BitbucketPullRequest>;
-    createPullRequest(projectKey: string, repoSlug: string, title: string, fromBranch: string, toBranch: string, description?: string, reviewers?: string[]): Promise<BitbucketPullRequest>;
+    createPullRequest(projectKey: string, repoSlug: string, title: string, fromBranch: string, toBranch: string, description?: string, reviewers?: string[], fromProjectKey?: string, fromRepoSlug?: string): Promise<BitbucketPullRequest>;
     getPullRequestDiff(projectKey: string, repoSlug: string, prId: number, contextLines?: number): Promise<string>;
     getPullRequestActivities(projectKey: string, repoSlug: string, prId: number, limit?: number, start?: number): Promise<PagedResponse<BitbucketPullRequestActivity>>;
     approvePullRequest(projectKey: string, repoSlug: string, prId: number): Promise<{

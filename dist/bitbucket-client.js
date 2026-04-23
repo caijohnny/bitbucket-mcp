@@ -128,16 +128,30 @@ export class BitbucketClient {
             this.handleError(error);
         }
     }
-    async createPullRequest(projectKey, repoSlug, title, fromBranch, toBranch, description, reviewers) {
+    async createPullRequest(projectKey, repoSlug, title, fromBranch, toBranch, description, reviewers, fromProjectKey, fromRepoSlug) {
         try {
+            const targetRepository = {
+                project: {
+                    key: projectKey,
+                },
+                slug: repoSlug,
+            };
+            const sourceRepository = {
+                project: {
+                    key: fromProjectKey || projectKey,
+                },
+                slug: fromRepoSlug || repoSlug,
+            };
             const response = await this.client.post(`/projects/${projectKey}/repos/${repoSlug}/pull-requests`, {
                 title,
                 description,
                 fromRef: {
                     id: `refs/heads/${fromBranch}`,
+                    repository: sourceRepository,
                 },
                 toRef: {
                     id: `refs/heads/${toBranch}`,
+                    repository: targetRepository,
                 },
                 reviewers: reviewers?.map((name) => ({ user: { name } })),
             });

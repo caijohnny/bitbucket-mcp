@@ -136,15 +136,23 @@ export function registerPullRequestTools(client: BitbucketClient) {
         properties: {
           projectKey: {
             type: 'string',
-            description: 'Project key (e.g., "PROJ")',
+            description: 'Target project key (e.g., "PROJ")',
           },
           repoSlug: {
             type: 'string',
-            description: 'Repository slug (e.g., "my-repo")',
+            description: 'Target repository slug (e.g., "my-repo")',
           },
           title: {
             type: 'string',
             description: 'PR title',
+          },
+          fromProjectKey: {
+            type: 'string',
+            description: 'Source project key for cross-repository PRs (defaults to projectKey)',
+          },
+          fromRepoSlug: {
+            type: 'string',
+            description: 'Source repository slug for cross-repository PRs (defaults to repoSlug)',
           },
           fromBranch: {
             type: 'string',
@@ -170,6 +178,8 @@ export function registerPullRequestTools(client: BitbucketClient) {
         projectKey: string;
         repoSlug: string;
         title: string;
+        fromProjectKey?: string;
+        fromRepoSlug?: string;
         fromBranch: string;
         toBranch: string;
         description?: string;
@@ -182,7 +192,9 @@ export function registerPullRequestTools(client: BitbucketClient) {
           args.fromBranch,
           args.toBranch,
           args.description,
-          args.reviewers
+          args.reviewers,
+          args.fromProjectKey,
+          args.fromRepoSlug
         );
         return {
           content: [
