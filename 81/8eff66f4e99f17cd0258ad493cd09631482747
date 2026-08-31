@@ -1,0 +1,24 @@
+README.md
+  s_2cf92d00d6d305::t_5db76139338d35 53,57-58,71-89,95,229,233-234,247-265,271
+src/index.ts
+  s_2cf92d00d6d305::t_5db76139338d35 8,28-29,31,174-188,334-351,354-355,400-409
+  s_2cf92d00d6d305::t_e25955c57b5f77 410
+dist/index.js
+  s_2cf92d00d6d305::t_5a6a02d9508547 6,20-21,23,136-147,259-274,276-277,313-321
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "818eff66f4e99f17cd0258ad493cd09631482747",
+  "prompts": {},
+  "sessions": {
+    "s_2cf92d00d6d305": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a056c9-2ca0-7683-a82c-4fc4eed1ffad",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "johntsai <johntsai@fanruan.com>"
+    }
+  }
+}
