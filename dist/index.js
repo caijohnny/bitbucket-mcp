@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { createServer as createHttpsServer } from 'node:https';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { CallToolRequestSchema, ListToolsRequestSchema, ListPromptsRequestSchema, GetPromptRequestSchema, } from '@modelcontextprotocol/sdk/types.js';
 import { BitbucketClient } from './bitbucket-client.js';
@@ -16,9 +17,10 @@ const DEFAULT_BITBUCKET_TOKEN = process.env.BITBUCKET_TOKEN;
 const MCP_HOST = process.env.MCP_HOST || '127.0.0.1';
 const MCP_PATH = process.env.MCP_PATH || '/mcp';
 const MCP_PORT = parsePort(process.env.MCP_PORT, 51666);
-const MCP_TLS_KEY_PATH = getRequiredEnv('MCP_TLS_KEY_PATH');
-const MCP_TLS_CERT_PATH = getRequiredEnv('MCP_TLS_CERT_PATH');
+const MCP_TLS_KEY_PATH = process.env.MCP_TLS_KEY_PATH;
+const MCP_TLS_CERT_PATH = process.env.MCP_TLS_CERT_PATH;
 const MCP_TLS_CA_PATH = process.env.MCP_TLS_CA_PATH;
+const MCP_TRANSPORT = getTransportMode(process.env.MCP_TRANSPORT);
 const sessions = new Map();
 function createMcpServer(bitbucketConfig) {
     const bitbucketClient = new BitbucketClient({
@@ -131,6 +133,18 @@ function getRequiredEnv(name) {
     }
     return value;
 }
+function getTransportMode(value) {
+    if (value === 'stdio' || value === 'https') {
+        return value;
+    }
+    if (value) {
+        console.error('Error: MCP_TRANSPORT must be either "stdio" or "https"');
+        process.exit(1);
+    }
+    // Preserve existing HTTPS deployments when certificate settings are present,
+    // while keeping command-based MCP clients working without extra configuration.
+    return MCP_TLS_KEY_PATH || MCP_TLS_CERT_PATH ? 'https' : 'stdio';
+}
 function writeTextResponse(res, statusCode, body, headers = {}) {
     res.writeHead(statusCode, {
         'Content-Type': 'text/plain; charset=utf-8',
@@ -242,11 +256,25 @@ function getSessionId(req) {
     const sessionId = req.headers['mcp-session-id'];
     return Array.isArray(sessionId) ? sessionId[0] : sessionId;
 }
-// Start the server
-async function main() {
+async function startStdioServer() {
+    if (!DEFAULT_BITBUCKET_TOKEN) {
+        console.error('Error: BITBUCKET_TOKEN environment variable is required');
+        process.exit(1);
+    }
+    const server = createMcpServer({
+        baseUrl: DEFAULT_BITBUCKET_URL,
+        token: DEFAULT_BITBUCKET_TOKEN,
+    });
+    const transport = new StdioServerTransport();
+    await server.connect(transport);
+    console.error('Bitbucket MCP stdio server started');
+}
+async function startHttpsServer() {
+    const tlsKeyPath = getRequiredEnv('MCP_TLS_KEY_PATH');
+    const tlsCertPath = getRequiredEnv('MCP_TLS_CERT_PATH');
     const httpsServer = createHttpsServer({
-        key: readFileSync(MCP_TLS_KEY_PATH),
-        cert: readFileSync(MCP_TLS_CERT_PATH),
+        key: readFileSync(tlsKeyPath),
+        cert: readFileSync(tlsCertPath),
         ...(MCP_TLS_CA_PATH ? { ca: readFileSync(MCP_TLS_CA_PATH) } : {}),
     }, (req, res) => {
         void routeRequest(req, res).catch((error) => {
@@ -281,6 +309,15 @@ async function main() {
     process.on('SIGINT', shutdown);
     process.on('SIGTERM', shutdown);
     console.error(`Bitbucket MCP HTTPS server listening on https://${MCP_HOST}:${MCP_PORT}${MCP_PATH}`);
+}
+// Start in stdio mode by default for command-based MCP clients. Existing HTTPS
+// configurations are detected from their TLS environment variables.
+async function main() {
+    if (MCP_TRANSPORT === 'stdio') {
+        await startStdioServer();
+        return;
+    }
+    await startHttpsServer();
 }
 main().catch((error) => {
     console.error('Fatal error:', error);
